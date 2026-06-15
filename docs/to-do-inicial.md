@@ -6,76 +6,265 @@
 ---
 
 ## 1) Área de aplicação
+
 **Games (jogos eletrônicos / videogames).**
 
-O conteúdo textual processado por PLN são as **descrições dos jogos** (sinopse, gênero, mecânicas, tema) e, opcionalmente, *reviews*. É um domínio com vocabulário rico ("mundo aberto", "roguelike", "cooperativo", "fantasia medieval"…), gerando boas sobreposições de palavras-chave entre jogos parecidos. Também é distinto de temas comuns (esportes, notícias), reduzindo risco de penalização por similaridade com outros grupos.
+O conteúdo textual processado por PLN são as **descrições dos jogos**: sinopse, gênero, mecânicas, tema e, opcionalmente, *reviews*. É um domínio com vocabulário rico, com termos como “mundo aberto”, “roguelike”, “cooperativo”, “fantasia medieval”, entre outros, gerando boas relações entre jogos parecidos. Também é uma área diferente de temas mais comuns, o que reduz o risco de similaridade com projetos de outros grupos.
+
+---
 
 ## 2) Problema a resolver
-**Recomendar jogos para um usuário** a partir das interações dele e da similaridade textual entre jogos.
 
-> Dado um usuário que já interagiu com alguns jogos (jogou / avaliou / curtiu), sugerir N jogos novos relevantes, combinando dois sinais:
-> - **(a) conteúdo:** jogos com descrições textualmente parecidas;
-> - **(b) colaborativo:** jogos consumidos por usuários de gosto parecido.
+**Recomendar jogos para um usuário** a partir das interações dele e da relação textual entre os jogos.
 
-## 3) Input (dados de entrada)
-**Dados fictícios gerados por LLM** (permitido pelo enunciado; dá controle e coerência). Três arquivos:
+> Dado um usuário que já interagiu com alguns jogos, como jogou, avaliou ou curtiu, o sistema deve sugerir N jogos novos que possam ser relevantes para ele.
 
-| Arquivo | Conteúdo |
-|---|---|
-| `jogos.json` | ~40 jogos: `{ id, nome, genero, descricao }` — `descricao` é o **texto** processado |
-| `usuarios.json` | ~30 usuários: `{ id, nome }` |
-| `interacoes.json` | `{ user_id, game_id, tipo, nota }` — `tipo` ∈ {jogou, avaliou, curtiu, compartilhou} |
+A recomendação será baseada em dois sinais:
 
-A LLM gera usuários **coerentes** (um fã de FPS interage com FPS etc.), para que a coocorrência de usuários tenha significado.
-*Alternativa real (upgrade opcional):* API RAWG ou descrições da Steam.
+* **Conteúdo textual:** jogos com descrições parecidas, considerando palavras-chave extraídas por PLN;
+* **Relação colaborativa:** jogos consumidos por usuários com gostos semelhantes.
+
+---
+
+## 3) Input — dados de entrada
+
+Serão utilizados **dados fictícios gerados por LLM**, o que é permitido pelo enunciado e possibilita maior controle e coerência dos dados.
+
+Três arquivos serão utilizados:
+
+| Arquivo           | Conteúdo                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `jogos.json`      | Aproximadamente 40 jogos: `{ id, nome, genero, descricao }`. A descrição será o texto processado pelo spaCy.              |
+| `usuarios.json`   | Aproximadamente 30 usuários: `{ id, nome }`.                                                                              |
+| `interacoes.json` | Interações no formato `{ user_id, game_id, tipo, nota }`, em que `tipo` pode ser: jogou, avaliou, curtiu ou compartilhou. |
+
+A LLM será usada para gerar usuários coerentes. Por exemplo, um usuário que gosta de FPS tende a interagir mais com jogos desse gênero. Isso torna as relações entre usuários e jogos mais significativas para o funcionamento do sistema.
+
+*Alternativa real, como melhoria opcional:* utilizar descrições de jogos da API RAWG ou da Steam.
+
+---
 
 ## 4) Modelagem do grafo
 
 ### Etapa A — Pré-processamento NLP com spaCy
-A banca cobra clareza em **como** o texto é processado. Pipeline:
 
-1. `pip install spacy` + `python -m spacy download pt_core_news_sm`
-2. Para cada `descricao`: `nlp(texto)` → para cada token: descartar stopword e pontuação; manter POS ∈ {NOUN, PROPN, ADJ, VERB}; usar `token.lemma_.lower()`.
-   - A **lematização** normaliza plural→singular e verbo→infinitivo (resolve "sextas"→"sexta", "jogando"→"jogar"), garantindo que a mesma ideia vire a mesma palavra-chave.
-3. Resultado: `jogo_id → Counter({ lema: frequência })` (saco de palavras-chave normalizado).
+A banca deve compreender claramente como o texto será processado. O pipeline será:
 
-### Etapa B — Grafo bipartido (Usuário–Jogo)
-- **Vértices:** Usuários ∪ Jogos.
-- **Arestas:** (u, j) se o usuário u interagiu com o jogo j.
-- **Peso da aresta:** força da interação (ex.: nota 1–5, ou por tipo: curtiu=1, jogou=2, avaliou=3, compartilhou=4).
-- **Representação:** lista de adjacência (dicionário).
+1. Instalar o spaCy:
 
-### Etapa C — Projeção Jogo–Jogo
-Combina os dois sinais:
+```bash
+pip install spacy
+python -m spacy download pt_core_news_sm
+```
 
-- **Similaridade semântica (texto):** para jogos que compartilham lemas,
-  `peso_sem = Σ min(freq_j1(k), freq_j2(k))` sobre os lemas comuns k.
-  Assim, palavras que mais se repetem entre dois jogos pesam mais — o peso emerge naturalmente da sobreposição de palavras-chave (não é necessário Jaccard).
-- **Coocorrência de usuários:** `peso_cooc = nº de usuários que interagiram com j1 e j2` (interseção de vizinhos no grafo bipartido).
-- **Combinação:** `w(j1, j2) = α · norm(peso_sem) + β · norm(peso_cooc)`.
-- **Filtragem:** manter apenas arestas acima de um limiar e/ou top-k vizinhos por jogo (poda do grafo).
+2. Para cada descrição de jogo, aplicar:
 
-### Etapa D — Recomendação
-1. Para o usuário u: obter os jogos já consumidos (vizinhos no bipartido).
-2. Candidatos = vizinhos desses jogos na projeção Jogo–Jogo, excluindo os já consumidos.
-3. `score(candidato) = Σ peso_interação(u, j_i) · w(j_i, candidato)`.
-4. Ordenar e retornar os top-N.
+```python
+nlp(texto)
+```
 
-## 5) Estrutura de dados adicional (além do grafo)
+3. Para cada token do texto:
 
-**Tabela hash / dicionário como Índice Invertido:** `lema → { jogos que contêm o lema }`.
+* descartar stopwords;
+* descartar pontuação;
+* manter apenas classes gramaticais relevantes, como `NOUN`, `PROPN`, `ADJ` e `VERB`;
+* aplicar lematização com `token.lemma_.lower()`.
 
-- **Justificativa técnica:** sem ele, calcular a similaridade exigiria comparar todos os pares de jogos — O(n²). Com o índice invertido, só comparamos jogos que **realmente compartilham alguma palavra-chave**, viabilizando a Etapa C com eficiência.
-- **Estrutura complementar (opcional):** fila de prioridade (min-heap) para extrair os **top-N** recomendados sem ordenar a lista inteira.
+A **lematização** permite normalizar palavras. Por exemplo:
+
+* “jogando” → “jogar”;
+* “mundos” → “mundo”;
+* “aventuras” → “aventura”.
+
+Isso ajuda o sistema a reconhecer que palavras diferentes podem representar a mesma ideia.
+
+O resultado dessa etapa será uma lista de palavras-chave normalizadas para cada jogo, podendo também conter a frequência de ocorrência de cada termo na descrição.
+
+Exemplo conceitual:
+
+```python
+jogo_01 = [
+    ("aventura", 2),
+    ("mundo", 1),
+    ("aberto", 1),
+    ("explorar", 1)
+]
+```
 
 ---
 
-## Algoritmos de grafo implementados pelo grupo (sem biblioteca pronta)
-Principais algoritmos:
+### Etapa B — Grafo bipartido Usuário–Jogo
 
-- Representação por **lista de adjacência**.
-- **BFS** (conectividade e cálculo de coocorrência de usuários).
-- **Construção da projeção bipartida** (Usuário–Jogo → Jogo–Jogo).
-- **Algoritmo de recomendação** por pontuação ponderada (Etapa D).
+Será construído um **grafo bipartido**, formado por dois conjuntos de vértices:
 
-> Bibliotecas de PLN (spaCy) são permitidas para o pré-processamento de texto; os algoritmos de grafo devem ser do grupo.
+* **Usuários**;
+* **Jogos**.
+
+As arestas conectam usuários aos jogos com os quais eles interagiram.
+
+Exemplo:
+
+```text
+Usuário 1 ─── Jogo A
+Usuário 1 ─── Jogo B
+Usuário 2 ─── Jogo B
+Usuário 2 ─── Jogo C
+```
+
+Aresta:
+
+```text
+(u, j)
+```
+
+Existe uma aresta entre o usuário `u` e o jogo `j` quando o usuário interagiu com aquele jogo.
+
+**Importante:** as arestas não terão peso.
+O grafo registrará apenas a existência da interação, ou seja, se o usuário interagiu ou não com determinado jogo.
+
+A representação será feita por **lista de adjacência**, utilizando listas de vizinhos.
+
+Exemplo conceitual:
+
+```python
+usuarios_para_jogos = [
+    [1, 2, 5],
+    [2, 3],
+    [1, 4]
+]
+```
+
+Nesse exemplo, cada posição da lista representa um usuário, e os valores internos representam os jogos conectados a ele.
+
+---
+
+### Etapa C — Projeção Jogo–Jogo
+
+A partir do grafo bipartido Usuário–Jogo, será construída uma **projeção Jogo–Jogo**.
+
+Nessa projeção, os vértices serão apenas jogos.
+
+Uma aresta entre dois jogos será criada quando existir alguma relação relevante entre eles.
+
+Essa relação pode ocorrer de duas formas:
+
+1. **Similaridade textual:** os jogos compartilham palavras-chave extraídas das descrições pelo spaCy;
+2. **Coocorrência de usuários:** pelo menos um mesmo usuário interagiu com os dois jogos.
+
+Exemplo:
+
+```text
+Jogo A ─── Jogo B
+```
+
+Isso significa que os jogos possuem alguma relação textual ou colaborativa.
+
+**Importante:** a projeção também não terá pesos nas arestas.
+A aresta apenas indica que existe relação entre os dois jogos, sem atribuir valor numérico a essa ligação.
+
+Critério para criar uma aresta:
+
+```text
+Criar aresta entre Jogo A e Jogo B se:
+- eles compartilharem palavras-chave relevantes; ou
+- tiverem usuários em comum.
+```
+
+Assim, o grafo Jogo–Jogo representa uma rede de jogos relacionados.
+
+---
+
+### Etapa D — Recomendação
+
+A recomendação será feita a partir dos jogos já consumidos pelo usuário.
+
+Passos:
+
+1. Obter os jogos já consumidos pelo usuário no grafo bipartido.
+2. Buscar, na projeção Jogo–Jogo, os vizinhos desses jogos.
+3. Remover da lista os jogos que o usuário já consumiu.
+4. Contar quantas vezes cada jogo candidato aparece como vizinho dos jogos já consumidos.
+5. Usar uma heap para selecionar os melhores candidatos.
+6. Retornar os top-N jogos recomendados.
+
+Exemplo:
+
+```text
+Usuário consumiu: Jogo A e Jogo B
+
+Na projeção:
+Jogo A está ligado a Jogo C e Jogo D
+Jogo B está ligado a Jogo C e Jogo E
+
+Candidatos:
+Jogo C aparece 2 vezes
+Jogo D aparece 1 vez
+Jogo E aparece 1 vez
+```
+
+Nesse caso, o Jogo C teria prioridade maior na recomendação, pois aparece relacionado a mais jogos já consumidos pelo usuário.
+
+A pontuação utilizada nessa etapa é apenas um valor auxiliar para ordenar os candidatos.
+Ela não representa peso nas arestas do grafo.
+
+---
+
+## 5) Estrutura de dados adicional — Heap de Prioridade
+
+Além do grafo, o projeto utilizará uma **heap de prioridade** como segunda estrutura de dados obrigatória.
+
+A heap será usada na etapa de recomendação para selecionar os top-N jogos mais relevantes para o usuário sem precisar ordenar todos os candidatos manualmente.
+
+### Funcionamento da heap
+
+Cada jogo candidato receberá uma pontuação auxiliar baseada na quantidade de vezes que aparece como vizinho dos jogos já consumidos pelo usuário.
+
+Exemplo:
+
+```text
+Jogo C → 2 ocorrências
+Jogo D → 1 ocorrência
+Jogo E → 1 ocorrência
+```
+
+Esses candidatos serão inseridos em uma heap.
+
+Como em Python a biblioteca `heapq` implementa uma min-heap, pode-se inserir a pontuação negativa para simular uma max-heap:
+
+```python
+heapq.heappush(heap, (-pontuacao, jogo_id))
+```
+
+Depois, os melhores jogos são retirados da heap:
+
+```python
+heapq.heappop(heap)
+```
+
+### Justificativa técnica
+
+A heap é adequada porque permite recuperar os candidatos mais relevantes com eficiência.
+
+Em vez de ordenar toda a lista de candidatos, a heap permite organizar os jogos por prioridade e extrair os top-N recomendados de forma mais eficiente.
+
+Assim, o projeto utiliza:
+
+* **Grafo:** para representar usuários, jogos e relações entre jogos;
+* **Heap:** para priorizar e selecionar os jogos recomendados.
+
+---
+
+## Algoritmos de grafo implementados pelo grupo
+
+Os principais algoritmos e procedimentos implementados serão:
+
+* Representação do grafo por **lista de adjacência**;
+* Construção do **grafo bipartido Usuário–Jogo**;
+* Construção da **projeção Jogo–Jogo**;
+* Percurso dos vizinhos na lista de adjacência;
+* Busca dos candidatos à recomendação;
+* Contagem de frequência dos candidatos;
+* Uso de **heap de prioridade** para selecionar os top-N jogos recomendados.
+
+As bibliotecas de PLN, como o spaCy, serão usadas apenas para o pré-processamento textual.
+Os algoritmos de grafo e a lógica de recomendação serão implementados pelo próprio grupo.
