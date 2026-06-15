@@ -229,18 +229,6 @@ Jogo E → 1 ocorrência
 
 Esses candidatos serão inseridos em uma heap.
 
-Como em Python a biblioteca `heapq` implementa uma min-heap, pode-se inserir a pontuação negativa para simular uma max-heap:
-
-```python
-heapq.heappush(heap, (-pontuacao, jogo_id))
-```
-
-Depois, os melhores jogos são retirados da heap:
-
-```python
-heapq.heappop(heap)
-```
-
 ### Justificativa técnica
 
 A heap é adequada porque permite recuperar os candidatos mais relevantes com eficiência.
