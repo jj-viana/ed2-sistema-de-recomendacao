@@ -1,0 +1,242 @@
+[
+  {
+    "id": 1,
+    "nome": "Reinos de Eldoria",
+    "genero": "RPG de fantasia",
+    "descricao": "RPG de mundo aberto em fantasia medieval com exploração, magia antiga, dragões, masmorras e escolhas narrativas que alteram o destino do reino."
+  },
+  {
+    "id": 2,
+    "nome": "Dragões do Norte",
+    "genero": "RPG de ação",
+    "descricao": "Aventura de ação com guerreiros, dragões, castelos congelados, combate corpo a corpo, progressão de habilidades e missões em regiões medievais."
+  },
+  {
+    "id": 3,
+    "nome": "Sombras de Valdaren",
+    "genero": "RPG sombrio",
+    "descricao": "Jogo de fantasia sombria com exploração de ruínas, monstros, magia proibida, decisões morais e batalhas táticas em um reino amaldiçoado."
+  },
+  {
+    "id": 4,
+    "nome": "Lendas da Floresta Antiga",
+    "genero": "Aventura e exploração",
+    "descricao": "Aventura narrativa em floresta mágica com exploração, criaturas místicas, enigmas ambientais, coleta de recursos e história sobre equilíbrio da natureza."
+  },
+  {
+    "id": 5,
+    "nome": "Estrelas de Aço",
+    "genero": "FPS futurista",
+    "descricao": "FPS de ficção científica com combate rápido, armas de energia, bases espaciais, soldados cibernéticos, partidas cooperativas e objetivos por equipe."
+  },
+  {
+    "id": 6,
+    "nome": "Operação Nebulosa",
+    "genero": "FPS tático",
+    "descricao": "Jogo de tiro tático em primeira pessoa com esquadrões, comunicação, mapas urbanos, estratégia de equipe, missões de resgate e equipamentos militares."
+  },
+  {
+    "id": 7,
+    "nome": "Zona Ômega",
+    "genero": "Battle royale",
+    "descricao": "Battle royale futurista com sobrevivência, coleta de armas, arena em constante mudança, combate intenso, veículos leves e habilidades especiais."
+  },
+  {
+    "id": 8,
+    "nome": "Linha de Frente 2042",
+    "genero": "FPS militar",
+    "descricao": "FPS militar com grandes batalhas, tanques, drones, classes de soldados, objetivos em equipe e mapas de guerra moderna."
+  },
+  {
+    "id": 9,
+    "nome": "Circuito Neon",
+    "genero": "Corrida arcade",
+    "descricao": "Corrida arcade em pistas neon, carros velozes, turbo, derrapagem, trilha eletrônica, campeonatos urbanos e competição online."
+  },
+  {
+    "id": 10,
+    "nome": "Rally das Montanhas",
+    "genero": "Corrida off-road",
+    "descricao": "Simulador de rally com lama, neve, curvas perigosas, veículos off-road, ajuste de suspensão e corridas em montanhas realistas."
+  },
+  {
+    "id": 11,
+    "nome": "Velocidade Solar",
+    "genero": "Corrida futurista",
+    "descricao": "Corrida futurista com naves terrestres, pistas antigravidade, velocidade extrema, curvas fechadas, boost e torneios interplanetários."
+  },
+  {
+    "id": 12,
+    "nome": "Kart Mania Brasil",
+    "genero": "Corrida casual",
+    "descricao": "Corrida divertida de kart com itens, pistas coloridas, personagens carismáticos, atalhos, partidas locais e competição entre amigos."
+  },
+  {
+    "id": 13,
+    "nome": "Colônia Marte",
+    "genero": "Estratégia e simulação",
+    "descricao": "Simulação de construção de colônia em Marte com gerenciamento de oxigênio, energia, pesquisa científica, mineração e sobrevivência dos habitantes."
+  },
+  {
+    "id": 14,
+    "nome": "Império das Eras",
+    "genero": "Estratégia em tempo real",
+    "descricao": "Estratégia em tempo real com coleta de recursos, construção de impérios, evolução tecnológica, batalhas entre civilizações e controle de exércitos."
+  },
+  {
+    "id": 15,
+    "nome": "Cidades Inteligentes",
+    "genero": "Simulação urbana",
+    "descricao": "Simulador de cidade com planejamento urbano, transporte público, impostos, energia, saneamento, zoneamento e qualidade de vida da população."
+  },
+  {
+    "id": 16,
+    "nome": "Fazenda Estelar",
+    "genero": "Simulação casual",
+    "descricao": "Simulação relaxante de fazenda em planeta distante com cultivo, criação de animais alienígenas, comércio, decoração e amizade com moradores."
+  },
+  {
+    "id": 17,
+    "nome": "Crônicas do Detetive",
+    "genero": "Mistério narrativo",
+    "descricao": "Jogo narrativo de investigação com pistas, interrogatórios, escolhas de diálogo, crimes misteriosos, dedução lógica e finais alternativos."
+  },
+  {
+    "id": 18,
+    "nome": "Arquivo Vermelho",
+    "genero": "Suspense investigativo",
+    "descricao": "Suspense policial com investigação de documentos secretos, quebra-cabeças, interrogatórios, conspirações, decisões narrativas e atmosfera sombria."
+  },
+  {
+    "id": 19,
+    "nome": "Mansão dos Ecos",
+    "genero": "Terror psicológico",
+    "descricao": "Terror psicológico em mansão abandonada com exploração, sons estranhos, enigmas, narrativa fragmentada, tensão constante e sobrevivência."
+  },
+  {
+    "id": 20,
+    "nome": "Noite Sem Lua",
+    "genero": "Terror de sobrevivência",
+    "descricao": "Terror de sobrevivência com recursos limitados, monstros, exploração noturna, fuga, atmosfera opressiva e resolução de enigmas."
+  },
+  {
+    "id": 21,
+    "nome": "Pixel Quest",
+    "genero": "Plataforma 2D",
+    "descricao": "Plataforma 2D com arte pixel, fases desafiadoras, pulos precisos, inimigos coloridos, coleta de moedas e chefes criativos."
+  },
+  {
+    "id": 22,
+    "nome": "Saltos Cósmicos",
+    "genero": "Plataforma de ação",
+    "descricao": "Jogo de plataforma espacial com gravidade variável, pulos, lasers, planetas pequenos, fases rápidas, desafios de precisão e power-ups."
+  },
+  {
+    "id": 23,
+    "nome": "Robôs Rebeldes",
+    "genero": "Metroidvania",
+    "descricao": "Metroidvania de ação com robôs, exploração de laboratório, habilidades desbloqueáveis, chefes mecânicos, mapas interconectados e combate ágil."
+  },
+  {
+    "id": 24,
+    "nome": "Cavaleiro Lunar",
+    "genero": "Ação e plataforma",
+    "descricao": "Aventura de ação em plataforma com cavaleiro, lua, castelos, golpes rápidos, magia, exploração lateral e inimigos sombrios."
+  },
+  {
+    "id": 25,
+    "nome": "Arena dos Campeões",
+    "genero": "MOBA",
+    "descricao": "MOBA competitivo com heróis, rotas, torres, habilidades especiais, estratégia de equipe, partidas online e objetivos no mapa."
+  },
+  {
+    "id": 26,
+    "nome": "Guardiões Elementais",
+    "genero": "MOBA de fantasia",
+    "descricao": "Jogo de arena com guardiões mágicos, elementos, rotas, combates em equipe, evolução de habilidades e controle de objetivos."
+  },
+  {
+    "id": 27,
+    "nome": "Cartas do Destino",
+    "genero": "Card game estratégico",
+    "descricao": "Jogo de cartas estratégico com construção de baralho, criaturas, magias, turnos táticos, combos e duelos online."
+  },
+  {
+    "id": 28,
+    "nome": "Mestres da Tática",
+    "genero": "Estratégia por turnos",
+    "descricao": "Estratégia por turnos com unidades, tabuleiro, posicionamento, habilidades, planejamento, vantagem de terreno e batalhas táticas."
+  },
+  {
+    "id": 29,
+    "nome": "Sobreviventes da Ilha",
+    "genero": "Sobrevivência cooperativa",
+    "descricao": "Sobrevivência em ilha tropical com coleta de recursos, construção de abrigo, fome, clima, exploração, artesanato e modo cooperativo."
+  },
+  {
+    "id": 30,
+    "nome": "Inverno Mortal",
+    "genero": "Sobrevivência",
+    "descricao": "Jogo de sobrevivência em ambiente congelado com frio extremo, caça, abrigo, fogo, recursos escassos, exploração e decisões difíceis."
+  },
+  {
+    "id": 31,
+    "nome": "Naufrágio Profundo",
+    "genero": "Sobrevivência oceânica",
+    "descricao": "Sobrevivência no oceano com mergulho, construção de base flutuante, coleta, criaturas marinhas, exploração submarina e gerenciamento de oxigênio."
+  },
+  {
+    "id": 32,
+    "nome": "Refúgio Zumbi",
+    "genero": "Sobrevivência de ação",
+    "descricao": "Sobrevivência em apocalipse zumbi com construção de base, coleta de suprimentos, defesa noturna, armas improvisadas e cooperação."
+  },
+  {
+    "id": 33,
+    "nome": "Cozinha Caótica",
+    "genero": "Cooperativo casual",
+    "descricao": "Jogo cooperativo de cozinha com preparo de pratos, comunicação, tempo limitado, fases engraçadas, trabalho em equipe e desafios locais."
+  },
+  {
+    "id": 34,
+    "nome": "Mudança Maluca",
+    "genero": "Cooperativo casual",
+    "descricao": "Cooperativo divertido sobre carregar móveis, resolver obstáculos, coordenação entre jogadores, física engraçada e fases familiares."
+  },
+  {
+    "id": 35,
+    "nome": "Festival dos Bichos",
+    "genero": "Party game",
+    "descricao": "Party game com minijogos, animais coloridos, competição casual, controles simples, diversão em grupo e partidas rápidas."
+  },
+  {
+    "id": 36,
+    "nome": "Dança das Estrelas",
+    "genero": "Ritmo musical",
+    "descricao": "Jogo musical de ritmo com músicas animadas, dança, pontuação, combos, desafios de precisão, modo festa e competição local."
+  },
+  {
+    "id": 37,
+    "nome": "Código Fantasma",
+    "genero": "Cyberpunk stealth",
+    "descricao": "Jogo cyberpunk furtivo com hackers, infiltração, drones, tecnologia, escolhas silenciosas, segurança digital e missões em megacorporações."
+  },
+  {
+    "id": 38,
+    "nome": "Neon Hacker",
+    "genero": "Puzzle cyberpunk",
+    "descricao": "Puzzle cyberpunk com invasão de sistemas, lógica, códigos, redes digitais, furtividade, tecnologia neon e narrativa sobre inteligência artificial."
+  },
+  {
+    "id": 39,
+    "nome": "Galáxia Mercante",
+    "genero": "Simulação espacial",
+    "descricao": "Simulação espacial com comércio entre planetas, naves, negociação, exploração galáctica, economia, rotas comerciais e gestão de tripulação."
+  },
+  {
+    "id": 40,
+    "nome": "Fronteira Estelar",
+    "genero": "Aventura espacial",
+    "descricao": "Aventura espacial com exploração de planetas, combate de naves, mineração, diplomacia alienígena, missões narrativas e descoberta de civilizações."
+  }
+]
