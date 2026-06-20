@@ -96,31 +96,3 @@ def selecionar_top_jogos(lista_de_scores, quantidade):
         recomendacoes.append(resultado)
 
     return recomendacoes
-
-
-    #teste
-
-''' if __name__ == "__main__":
-    print("Testando o heap.py...")
-    print()
-
-    # scores fictícios para testar
-    scores_de_exemplo = [
-        [0.74, "Hollow Knight"],
-        [0.91, "Elden Ring"],
-        [0.62, "Celeste"],
-        [0.88, "Dark Souls"],
-        [0.55, "Ori and the Blind Forest"],
-        [0.95, "Sekiro"],
-    ]
-
-    top_3 = selecionar_top_jogos(scores_de_exemplo, 3)
-
-    print("Top 3 recomendacoes:")
-    posicao = 1
-    for item in top_3:
-        score = item[0]
-        nome = item[1]
-        print(posicao, "-", nome, "| score:", score)
-        posicao = posicao + 1
-        '''
