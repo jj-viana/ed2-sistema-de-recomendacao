@@ -34,11 +34,13 @@ Três arquivos serão utilizados:
 
 | Arquivo           | Conteúdo                                                                                                                  |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `jogos.json`      | Aproximadamente 40 jogos: `{ id, nome, genero, descricao }`. A descrição será o texto processado pelo spaCy.              |
-| `usuarios.json`   | Aproximadamente 30 usuários: `{ id, nome }`.                                                                              |
-| `interacoes.json` | Interações no formato `{ user_id, game_id, tipo, nota }`, em que `tipo` pode ser: jogou, avaliou, curtiu ou compartilhou. |
+| `jogos.json`      | 40 jogos: `{ id, nome, genero, descricao }`. A descrição é o texto processado pelo spaCy.                                |
+| `usuarios.json`   | 30 usuários: `{ id, nome }`.                                                                                             |
+| `interacoes.json` | 168 interações no formato `{ user_id, game_id }`. **Sem peso:** a interação apenas existe, não guarda nota nem tipo.      |
 
-A LLM será usada para gerar usuários coerentes. Por exemplo, um usuário que gosta de FPS tende a interagir mais com jogos desse gênero. Isso torna as relações entre usuários e jogos mais significativas para o funcionamento do sistema.
+A LLM foi usada para gerar usuários coerentes. Por exemplo, um usuário que gosta de FPS tende a interagir mais com jogos desse gênero. Isso torna as relações entre usuários e jogos mais significativas para o funcionamento do sistema.
+
+> **Decisão de projeto (sem peso):** seguindo a orientação do professor, as interações **não** têm peso (nota/tipo). O grafo registra apenas *se* houve interação, mantendo o modelo simples. Toda a "força" da recomendação emerge de **contagens** (quantos vizinhos em comum) e de **sobreposição de conjuntos** (Jaccard de palavras-chave), nunca de pesos nas arestas.
 
 *Alternativa real, como melhoria opcional:* utilizar descrições de jogos da API RAWG ou da Steam.
 
@@ -209,6 +211,38 @@ Ela não representa peso nas arestas do grafo.
 
 ---
 
+### Etapa E — Recomendação para usuário NOVO (cold start por texto)
+
+> **Responde à pergunta do professor (Q6): "como calcular a similaridade de um usuário novo com os outros da base?"**
+
+A Etapa D só funciona para um usuário que **já interagiu** com jogos. Um usuário **novo** chega **sem nenhuma aresta** no grafo bipartido, então ele não tem jogos em comum com ninguém — a similaridade colaborativa seria sempre zero. Por isso, para o usuário novo, a similaridade vem do **texto** que ele digita.
+
+**Passos:**
+
+1. **Perfil de cada usuário existente** (calculado uma vez): percorre-se o grafo bipartido do usuário até os jogos dele e faz-se a **união** das palavras-chave (lemas) das descrições desses jogos.
+
+   ```text
+   perfil(u) = união dos lemas dos jogos com que u interagiu
+   ```
+
+2. **Perfil do usuário novo:** ele digita uma frase livre (ex.: *"gosto de RPG de fantasia com mundo aberto"*). O mesmo pipeline spaCy transforma a frase em um conjunto de lemas.
+
+3. **Similaridade de Jaccard** entre o conjunto do usuário novo e o perfil de cada usuário existente:
+
+   ```text
+   similaridade(novo, u) = |lemas_em_comum| / |lemas_no_total|
+   ```
+
+   O resultado fica entre 0 e 1. Em caso de empate, desempata-se por maior número de lemas em comum (interseção absoluta).
+
+4. **Escolhe-se o usuário mais parecido** (maior Jaccard) — é o "vizinho de gosto".
+
+5. **Recomendam-se os jogos desse vizinho** ao usuário novo (ordenados pela relevância textual com a frase digitada). Em outras palavras, o usuário novo **herda** as arestas-jogo do vizinho mais parecido — e é assim que surge a aresta que liga o usuário novo ao grafo.
+
+**Por que isso respeita as restrições:** o grafo continua **sem peso** (a similaridade é só contagem de conjuntos, vive fora do grafo); a entrada é **texto**; o fluxo é exatamente *usuário novo → usuário existente parecido → jogos dele → recomendação*; e resolve o **cold start** (funciona mesmo sem nenhuma interação prévia).
+
+---
+
 ## 5) Estrutura de dados adicional — Heap de Prioridade
 
 Além do grafo, o projeto utilizará uma **heap de prioridade** como segunda estrutura de dados obrigatória.
@@ -252,6 +286,7 @@ Os principais algoritmos e procedimentos implementados serão:
 * Percurso dos vizinhos na lista de adjacência;
 * Busca dos candidatos à recomendação;
 * Contagem de frequência dos candidatos;
+* **Construção do perfil de palavras-chave** de cada usuário (percurso no grafo bipartido) e **similaridade de Jaccard** para o usuário novo (Etapa E);
 * Uso de **heap de prioridade** para selecionar os top-N jogos recomendados.
 
 As bibliotecas de PLN, como o spaCy, serão usadas apenas para o pré-processamento textual.
