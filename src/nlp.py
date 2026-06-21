@@ -1,6 +1,8 @@
-#criar aqui o pré-processamento textual com spaCy
+#pré-processamento textual com spaCy
 #a saída principal é uma lista de palavras-chave normalizadas por jogo
 #a frequência de termos é guardada em uma lista de pares [termo, frequencia]
+from __future__ import annotations
+from typing import Any
 import spacy
 
 # Carregar o modelo português
@@ -26,9 +28,21 @@ def processar_texto_spacy(texto: str) -> list[tuple[str, int]]:
     # Retornar (termo, frequencia)
     return sorted(frequencia_palavras.items())
 
+
+def processar_jogos(jogos: list[dict[str, Any]]) -> list[list[tuple[str, int]]]:
+    # processa a descrição de cada jogo e devolve as palavras-chave indexadas
+    # por jogo. A posição i da lista corresponde ao jogo de id (i + 1),
+    # mesma convenção usada na construção do grafo bipartido (game_id - 1).
+    palavras_por_jogo: list[list[tuple[str, int]]] = [[] for _ in range(len(jogos))]
+    for jogo in jogos:
+        indice = int(jogo["id"]) - 1
+        palavras_por_jogo[indice] = processar_texto_spacy(jogo["descricao"])
+    return palavras_por_jogo
+
+
 #Teste só para ver se está rodando certo
 if __name__ == "__main__":
-    print("Executando teste do módulo spaCy.py...")
+    print("Executando teste do módulo nlp.py...")
     texto_exemplo = "RPG de mundo aberto. Explorar o mundo de RPG é incrível!"
     resultado = processar_texto_spacy(texto_exemplo)
     

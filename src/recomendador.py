@@ -92,7 +92,33 @@ def selecionar_top_jogos(lista_de_scores, quantidade):
         resultado = heap.remover_maior()
 
         if resultado is None:
-            break  
+            break
         recomendacoes.append(resultado)
 
     return recomendacoes
+
+
+def recomendar(usuario_indice, grafo_bipartido, projecao, quantidade=5):
+    # Etapa D: recomendação item-item a partir da projeção Jogo-Jogo.
+    # Retorna uma lista de pares [score, jogo_indice] já ordenada pela heap.
+    if usuario_indice < 0 or usuario_indice >= grafo_bipartido.quantidade_usuarios:
+        raise IndexError("Usuário inválido na recomendação.")
+
+    # jogos com que o usuário já interagiu (não podem ser recomendados de novo)
+    jogos_consumidos = set(grafo_bipartido.usuarios[usuario_indice])
+
+    # conta quantas vezes cada candidato aparece como vizinho, na projeção,
+    # dos jogos que o usuário já consumiu
+    frequencia_candidatos = {}
+    for jogo in jogos_consumidos:
+        for vizinho in projecao.vizinhos(jogo):
+            if vizinho in jogos_consumidos:
+                continue
+            frequencia_candidatos[vizinho] = frequencia_candidatos.get(vizinho, 0) + 1
+
+    # monta a lista [score, jogo_indice] e usa a heap para pegar os top-N
+    lista_de_scores = [
+        [frequencia, jogo_indice]
+        for jogo_indice, frequencia in frequencia_candidatos.items()
+    ]
+    return selecionar_top_jogos(lista_de_scores, quantidade)
