@@ -123,16 +123,17 @@ Top 5 jogos recomendados:
 ```text
 ==================================================
 Usuário NOVO (cold start) — similaridade por texto
-Texto informado: "Adoro RPG de fantasia medieval com mundo aberto, magia e dragões"
-Palavras-chave extraídas: ['abrir', 'adorar', 'dragão', 'exploração', 'fantasia', ...]
+Texto informado: "rpg de fantasia com mundo aberto e dragoes"
+Palavras-chave extraídas: ['abrir', 'dragoes', 'fantasia', 'mundo', 'rpg']
 
-Usuário mais parecido: Sofia (id 19) — similaridade de Jaccard = 0.114
-
-Top 5 jogos recomendados (herdados do usuário parecido):
-  1. Reinos de Eldoria
-  2. Sombras de Valdaren
-  3. Dragões do Norte
+Top 5 jogos recomendados (com o usuário de origem):
+  1. Reinos de Eldoria  — de Sofia (Jaccard 0.056)
+  2. Sombras de Valdaren  — de Sofia (Jaccard 0.056)
+  3. Dragões do Norte  — de Sofia (Jaccard 0.056)
   ...
+
+Usuários parecidos usados (1):
+  - Sofia (id 19) — Jaccard 0.056
 ==================================================
 ```
 

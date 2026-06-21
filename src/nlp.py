@@ -12,13 +12,17 @@ def processar_texto_spacy(texto: str) -> list[tuple[str, int]]:
     doc = nlp(texto)
     palavras_processadas = []
     for token in doc:
-        # Descartar stopwords e pontuação
-        if not token.is_stop and not token.is_punct:
-            # Manter classes gramaticais relevantes
-            if token.pos_ in ["NOUN", "PROPN", "ADJ", "VERB"]:
-                # Lematização
-                palavras_processadas.append(token.lemma_.lower())
-    
+        # descartar stopwords (de, para, com, o, a...), pontuação e não-palavras
+        # (números/símbolos). As palavras funcionais já são stopwords, então não
+        # precisamos filtrar por classe gramatical — isso evita perder termos de
+        # domínio que o etiquetador erra, como a sigla "fps".
+        if token.is_stop or token.is_punct or not token.is_alpha:
+            continue
+        # lematização (normaliza plural/conjugação para a mesma palavra-chave)
+        lema = token.lemma_.lower()
+        if len(lema) >= 2:
+            palavras_processadas.append(lema)
+
     # Contar a frequência das palavras
     frequencia_palavras = {}
 
