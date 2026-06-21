@@ -19,9 +19,8 @@ import sys
 
 from src.carregador import carregar_json, buscar_nome_por_id
 from src.grafo import construir_grafo_bipartido, construir_projecao_jogo_jogo
-from src.nlp import processar_jogos
-from src.recomendador import recomendar
-from src.usuario_novo import recomendar_para_usuario_novo
+from src.nlp import processar_jogos, palavras_chave
+from src.recomendador import recomendar, recomendar_usuario_novo
 
 CAMINHO_JOGOS = "data/jogos.json"
 CAMINHO_USUARIOS = "data/usuarios.json"
@@ -75,8 +74,11 @@ def fluxo_usuario_novo(jogos, usuarios, grafo_bipartido, palavras_por_jogo,
     print("Usuário NOVO (cold start) — similaridade por texto")
     print(f'Texto informado: "{texto}"')
 
-    resultado = recomendar_para_usuario_novo(
-        texto, grafo_bipartido, palavras_por_jogo, quantidade
+    # texto -> conjunto de palavras-chave (camada de PLN); a recomendação
+    # recebe o conjunto já pronto, sem depender do spaCy
+    perfil_novo = palavras_chave(texto)
+    resultado = recomendar_usuario_novo(
+        perfil_novo, grafo_bipartido, palavras_por_jogo, quantidade
     )
 
     if resultado is None:
@@ -85,11 +87,10 @@ def fluxo_usuario_novo(jogos, usuarios, grafo_bipartido, palavras_por_jogo,
         print("=" * 50)
         return
 
-    perfil = sorted(resultado["perfil_novo"])
     indice_similar = resultado["usuario_similar_indice"]
     nome_similar = buscar_nome_por_id(usuarios, indice_similar + 1)
 
-    print(f"Palavras-chave extraídas: {perfil}")
+    print(f"Palavras-chave extraídas: {sorted(perfil_novo)}")
     print(
         f"\nUsuário mais parecido: {nome_similar} (id {indice_similar + 1}) "
         f"— similaridade de Jaccard = {resultado['similaridade']:.3f}"

@@ -40,6 +40,12 @@ def processar_jogos(jogos: list[dict[str, Any]]) -> list[list[tuple[str, int]]]:
     return palavras_por_jogo
 
 
+def palavras_chave(texto: str) -> set[str]:
+    # conjunto de lemas (palavras-chave) extraídos de um texto livre.
+    # usado para representar a frase digitada por um usuário novo.
+    return {termo for termo, _frequencia in processar_texto_spacy(texto)}
+
+
 #Teste só para ver se está rodando certo
 if __name__ == "__main__":
     print("Executando teste do módulo nlp.py...")

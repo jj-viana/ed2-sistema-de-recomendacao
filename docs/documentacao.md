@@ -17,11 +17,11 @@ flowchart TD
 
     bipartido --> projecao["grafo.py<br/>projeção Jogo-Jogo"]
     nlp --> projecao
-    bipartido --> perfil["usuario_novo.py<br/>perfil de palavras-chave + Jaccard"]
+    bipartido --> perfil["grafo.py<br/>perfis de palavras-chave dos usuários"]
     nlp --> perfil
 
     projecao --> recItem["recomendador.py<br/>recomendar() + heap<br/>(usuário existente)"]
-    perfil --> recNovo["usuario_novo.py<br/>recomendar_para_usuario_novo()<br/>(usuário novo)"]
+    perfil --> recNovo["recomendador.py<br/>recomendar_usuario_novo() + Jaccard<br/>(usuário novo)"]
 
     recItem --> main["main.py (CLI)"]
     recNovo --> main
@@ -73,12 +73,13 @@ Usa o modelo `pt_core_news_sm`. **O spaCy é usado apenas aqui.**
 |---|---|
 | `processar_texto_spacy(texto)` | Tokeniza o texto; descarta *stopwords* e pontuação; mantém só `NOUN`, `PROPN`, `ADJ`, `VERB`; aplica **lematização** (`token.lemma_.lower()`); devolve uma lista ordenada de pares `(lema, frequência)`. |
 | `processar_jogos(jogos)` | Aplica a função acima na `descricao` de cada jogo e devolve `palavras_por_jogo`, indexado por jogo (posição `i` ↔ `id i+1`). |
+| `palavras_chave(texto)` | Devolve o **conjunto** de lemas de um texto livre. Usado para representar a frase digitada por um usuário novo. |
 
 **Por que lematizar:** normaliza variações para a mesma palavra-chave
 ("jogando" → "jogar", "mundos" → "mundo"), aumentando a sobreposição entre
 textos que falam da mesma coisa.
 
-### 3.3 `grafo.py` — grafo bipartido e projeção
+### 3.3 `grafo.py` — grafo bipartido, projeção e perfis de usuário
 
 | Componente | O que faz |
 |---|---|
@@ -87,29 +88,25 @@ textos que falam da mesma coisa.
 | `construir_grafo_bipartido(usuarios, jogos, interacoes)` | Monta o bipartido a partir das interações (convertendo `id → índice`). |
 | `contar_palavras_comuns(a, b)` | Conta quantas palavras-chave dois jogos têm em comum. |
 | `construir_projecao_jogo_jogo(bipartido, palavras_por_jogo, minimo_palavras_comuns=2)` | Constrói o grafo **Jogo–Jogo**. Cria aresta entre dois jogos se: (1) compartilham ≥ `minimo_palavras_comuns` palavras-chave **ou** (2) algum mesmo usuário interagiu com os dois (coocorrência). |
+| `construir_perfil_usuario(bipartido, palavras_por_jogo, u)` | Perfil de palavras-chave do usuário `u` = **união** dos lemas dos jogos com que ele interagiu (percorrendo o grafo bipartido). |
+| `construir_perfis_usuarios(bipartido, palavras_por_jogo)` | Constrói o perfil de todos os usuários (uma vez). É a base da similaridade do usuário novo. |
 
-### 3.4 `recomendador.py` — heap e recomendação item–item (Etapa D)
+### 3.4 `recomendador.py` — heap e as duas recomendações (Etapas D e E)
+
+Resolve as duas recomendações. As funções da Etapa E (usuário novo) recebem o
+conjunto de palavras-chave **já pronto** — assim este módulo **não depende do
+spaCy** e continua testável de forma isolada.
 
 | Componente | O que faz |
 |---|---|
 | `MaxHeap` | **Heap binária máxima** implementada do zero (lista 1-indexada). Métodos: `inserir(score, nome)`, `remover_maior()`, e os auxiliares `subir`/`descer`. Ordena por `score`. |
 | `selecionar_top_jogos(lista_de_scores, quantidade)` | Insere todos os candidatos na heap e remove os `quantidade` maiores. |
 | `recomendar(usuario_indice, bipartido, projecao, quantidade=5)` | **Etapa D.** Pega os jogos do usuário; para cada um, olha os vizinhos na projeção; ignora jogos já consumidos; conta quantas vezes cada candidato aparece; usa a heap para devolver os top-N como `[score, jogo_indice]`. |
-
-### 3.5 `usuario_novo.py` — recomendação por texto (Etapa E / Q6)
-
-Resolve o **cold start**: um usuário novo não tem arestas, então a similaridade
-vem do **texto**.
-
-| Função | O que faz |
-|---|---|
-| `construir_perfil_usuario(bipartido, palavras_por_jogo, u)` | Perfil de palavras-chave do usuário `u` = **união** dos lemas das descrições dos jogos com que ele interagiu (percorrendo o grafo). |
-| `construir_perfis_usuarios(bipartido, palavras_por_jogo)` | Constrói o perfil de todos os usuários (uma vez). |
 | `jaccard(a, b)` | Índice de Jaccard entre dois conjuntos: `|a ∩ b| / |a ∪ b|`, em `[0, 1]`. |
 | `usuario_mais_similar(perfil_novo, perfis)` | Devolve o índice do usuário com maior Jaccard. Desempate: maior interseção absoluta. |
-| `recomendar_para_usuario_novo(texto, bipartido, palavras_por_jogo, quantidade=5)` | Processa o texto → conjunto de lemas; acha o usuário mais parecido; devolve os jogos dele (ordenados pela relevância textual com o texto digitado). Retorna `None` se nada casar (cold start total). |
+| `recomendar_usuario_novo(perfil_novo, bipartido, palavras_por_jogo, quantidade=5)` | **Etapa E.** Recebe o conjunto de lemas do usuário novo; monta os perfis (via `grafo.py`); acha o usuário mais parecido; devolve os jogos dele (ordenados pela relevância textual). Retorna `None` se nada casar (cold start total). |
 
-### 3.6 `main.py` — ponto de entrada (CLI)
+### 3.5 `main.py` — ponto de entrada (CLI)
 
 Orquestra tudo e escolhe o modo pelos argumentos:
 

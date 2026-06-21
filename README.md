@@ -45,9 +45,8 @@ ed2-sistema-de-recomendacao/
 ├── src/
 │   ├── carregador.py        # leitura dos JSON e busca de nome por id
 │   ├── nlp.py               # pré-processamento textual com spaCy (lematização)
-│   ├── grafo.py             # grafo bipartido + projeção Jogo–Jogo
-│   ├── recomendador.py      # heap (max-heap) + recomendação item–item (Etapa D)
-│   └── usuario_novo.py      # recomendação para usuário novo por texto (Etapa E / Q6)
+│   ├── grafo.py             # grafo bipartido + projeção Jogo–Jogo + perfis de usuário
+│   └── recomendador.py      # heap + recomendação item–item (Etapa D) e por texto (Etapa E / Q6)
 ├── tests/
 │   └── test_recomendador.py
 └── docs/                    # proposta, enunciado e documentação técnica
@@ -147,7 +146,8 @@ Top 5 jogos recomendados (herdados do usuário parecido):
 | **Projeção Jogo–Jogo** | `src/grafo.py` | liga jogos por palavras-chave em comum ou coocorrência de usuários |
 | **Recomendação item–item** | `src/recomendador.py` | conta vizinhos na projeção e ordena |
 | **Max-heap de prioridade** | `src/recomendador.py` | seleciona os top-N sem ordenar tudo |
-| **Perfil de palavras-chave + Jaccard** | `src/usuario_novo.py` | similaridade do usuário novo por texto |
+| **Perfil de palavras-chave** | `src/grafo.py` | união dos lemas dos jogos de cada usuário |
+| **Similaridade de Jaccard** | `src/recomendador.py` | similaridade do usuário novo por texto |
 
 > O spaCy é usado **apenas** para o pré-processamento textual (lematização). Toda
 > a modelagem em grafos e a lógica de recomendação são implementadas pelo grupo,

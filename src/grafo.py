@@ -105,3 +105,23 @@ def construir_projecao_jogo_jogo(
                 jogo_b = jogos_do_usuario[posicao_b]
                 projecao.adicionar_aresta(jogo_a, jogo_b)
     return projecao
+
+def construir_perfil_usuario(
+    grafo_bipartido: grafoBipartido,
+    palavras_por_jogo: list[list[list[Any]]],
+    usuario_indice: int,
+) -> set[str]: # perfil = união dos lemas das descrições dos jogos do usuário
+    perfil: set[str] = set()
+    for jogo_indice in grafo_bipartido.usuarios[usuario_indice]:
+        for termo, _frequencia in palavras_por_jogo[jogo_indice]:
+            perfil.add(termo)
+    return perfil
+
+def construir_perfis_usuarios(
+    grafo_bipartido: grafoBipartido,
+    palavras_por_jogo: list[list[list[Any]]],
+) -> list[set[str]]: # monta o perfil de palavras-chave de todos os usuários (uma vez só)
+    return [
+        construir_perfil_usuario(grafo_bipartido, palavras_por_jogo, usuario_indice)
+        for usuario_indice in range(grafo_bipartido.quantidade_usuarios)
+    ]

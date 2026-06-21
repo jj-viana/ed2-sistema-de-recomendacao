@@ -1,5 +1,7 @@
 #lógica de recomendação usando heap de prioridade
 
+from src.grafo import construir_perfis_usuarios
+
 
 class MaxHeap:
 
@@ -122,3 +124,59 @@ def recomendar(usuario_indice, grafo_bipartido, projecao, quantidade=5):
         for jogo_indice, frequencia in frequencia_candidatos.items()
     ]
     return selecionar_top_jogos(lista_de_scores, quantidade)
+
+
+# --- Recomendação para usuário NOVO (cold start por texto, Etapa E / Q6) ---
+# Um usuário novo chega sem nenhuma aresta no grafo, então a similaridade não
+# pode vir de jogos em comum (seria zero): ela vem do TEXTO que ele digita,
+# comparado por Jaccard com o perfil de palavras-chave de cada usuário.
+
+def jaccard(conjunto_a, conjunto_b):
+    # similaridade de Jaccard: |interseção| / |união|, resultado em [0, 1]
+    uniao = len(conjunto_a | conjunto_b)
+    if uniao == 0:
+        return 0.0
+    return len(conjunto_a & conjunto_b) / uniao
+
+
+def usuario_mais_similar(perfil_novo, perfis):
+    # retorna (índice do usuário mais parecido, similaridade de Jaccard).
+    # desempate: maior interseção absoluta (quem compartilha mais palavras).
+    melhor_indice = -1
+    melhor_score = -1.0
+    melhor_intersecao = -1
+    for indice, perfil in enumerate(perfis):
+        score = jaccard(perfil_novo, perfil)
+        intersecao = len(perfil_novo & perfil)
+        if score > melhor_score or (score == melhor_score and intersecao > melhor_intersecao):
+            melhor_indice = indice
+            melhor_score = score
+            melhor_intersecao = intersecao
+    return melhor_indice, melhor_score
+
+
+def recomendar_usuario_novo(perfil_novo, grafo_bipartido, palavras_por_jogo, quantidade=5):
+    # recebe o conjunto de palavras-chave do usuário novo (já extraído do texto),
+    # acha o usuário mais parecido por Jaccard e recomenda os jogos dele.
+    # retorna None se nenhum usuário compartilhar qualquer palavra-chave (cold start).
+    perfis = construir_perfis_usuarios(grafo_bipartido, palavras_por_jogo)
+    indice_similar, similaridade = usuario_mais_similar(perfil_novo, perfis)
+    if indice_similar < 0 or similaridade <= 0.0:
+        return None
+
+    # ordena os jogos do vizinho pela relevância textual com o usuário novo
+    # (quantos lemas o jogo compartilha com o texto digitado) e pega os top-N
+    jogos_do_vizinho = grafo_bipartido.usuarios[indice_similar]
+    jogos_ordenados = sorted(
+        jogos_do_vizinho,
+        key=lambda jogo_indice: len(
+            perfil_novo & {termo for termo, _f in palavras_por_jogo[jogo_indice]}
+        ),
+        reverse=True,
+    )
+
+    return {
+        "usuario_similar_indice": indice_similar,
+        "similaridade": similaridade,
+        "jogos_indices": jogos_ordenados[:quantidade],
+    }
