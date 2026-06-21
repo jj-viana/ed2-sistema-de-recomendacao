@@ -71,7 +71,7 @@ Usa o modelo `pt_core_news_sm`. **O spaCy é usado apenas aqui.**
 
 | Função | O que faz |
 |---|---|
-| `processar_texto_spacy(texto)` | Tokeniza o texto; descarta *stopwords* e pontuação; mantém só `NOUN`, `PROPN`, `ADJ`, `VERB`; aplica **lematização** (`token.lemma_.lower()`); devolve uma lista ordenada de pares `(lema, frequência)`. |
+| `processar_texto_spacy(texto)` | Tokeniza o texto; descarta *stopwords*, pontuação e não-palavras (números/símbolos); aplica **lematização** (`token.lemma_.lower()`) no restante. Não filtra por classe gramatical — as palavras funcionais já são *stopwords*, e dispensar o filtro de POS evita perder siglas de domínio que o etiquetador erra (ex.: "fps", marcado como preposição). Devolve pares `(lema, frequência)`. |
 | `processar_jogos(jogos)` | Aplica a função acima na `descricao` de cada jogo e devolve `palavras_por_jogo`, indexado por jogo (posição `i` ↔ `id i+1`). |
 | `palavras_chave(texto)` | Devolve o **conjunto** de lemas de um texto livre. Usado para representar a frase digitada por um usuário novo. |
 
@@ -103,8 +103,8 @@ spaCy** e continua testável de forma isolada.
 | `selecionar_top_jogos(lista_de_scores, quantidade)` | Insere todos os candidatos na heap e remove os `quantidade` maiores. |
 | `recomendar(usuario_indice, bipartido, projecao, quantidade=5)` | **Etapa D.** Pega os jogos do usuário; para cada um, olha os vizinhos na projeção; ignora jogos já consumidos; conta quantas vezes cada candidato aparece; usa a heap para devolver os top-N como `[score, jogo_indice]`. |
 | `jaccard(a, b)` | Índice de Jaccard entre dois conjuntos: `|a ∩ b| / |a ∪ b|`, em `[0, 1]`. |
-| `usuario_mais_similar(perfil_novo, perfis)` | Devolve o índice do usuário com maior Jaccard. Desempate: maior interseção absoluta. |
-| `recomendar_usuario_novo(perfil_novo, bipartido, palavras_por_jogo, quantidade=5)` | **Etapa E.** Recebe o conjunto de lemas do usuário novo; monta os perfis (via `grafo.py`); acha o usuário mais parecido; devolve os jogos dele (ordenados pela relevância textual). Retorna `None` se nada casar (cold start total). |
+| `usuarios_similares(perfil_novo, perfis)` | Devolve a lista de usuários `(índice, score)` com Jaccard > 0, ordenada do mais parecido ao menos parecido (desempate: maior interseção absoluta). |
+| `recomendar_usuario_novo(perfil_novo, bipartido, palavras_por_jogo, quantidade=5)` | **Etapa E.** Recebe o conjunto de lemas do usuário novo; monta os perfis (via `grafo.py`); herda os jogos dos usuários mais parecidos (em ordem, sem repetir) até atingir `quantidade` — o mais parecido tem prioridade, os demais só preenchem. Cada recomendação guarda o **usuário de origem** e o Jaccard dele (a saída lista de quem veio cada jogo). Retorna `None` se nada casar (cold start total). |
 
 ### 3.5 `main.py` — ponto de entrada (CLI)
 
@@ -134,8 +134,8 @@ do usuário se ligam a um candidato, mais relevante ele é.
 1. Construir o perfil de palavras-chave de cada usuário (união dos lemas dos seus jogos).
 2. Processar o texto do usuário novo com spaCy → conjunto de lemas.
 3. Calcular o Jaccard entre o texto e cada perfil.
-4. Escolher o usuário mais parecido (maior Jaccard).
-5. Recomendar os jogos desse usuário (o novo "herda" as arestas-jogo dele).
+4. Ordenar os usuários do mais parecido ao menos parecido (maior Jaccard).
+5. Recomendar os jogos desses usuários (o novo "herda" as arestas-jogo deles), começando pelo mais parecido e usando os seguintes só para completar a quantidade pedida sem repetir jogos. A saída mostra, para cada jogo, **de qual usuário** ele veio, e lista os usuários parecidos usados.
 
 A "aresta" do usuário novo nasce desse casamento textual: o texto escolhe o
 usuário mais parecido, e os jogos dele viram as recomendações — sem peso, a
@@ -155,7 +155,7 @@ de palavras-chave.
 | Projeção (similaridade textual) | `O(J² × L²)` | compara todos os pares de jogos (e, em cada par, os conjuntos de palavras) |
 | Projeção (coocorrência) | `O(U × grau²)` | pares de jogos por usuário |
 | Recomendação item–item | `O(grau × grau_projeção + C log C)` | `C` = nº de candidatos (heap) |
-| Recomendação usuário novo | `O(U × L)` | Jaccard contra todos os perfis |
+| Recomendação usuário novo | `O(U × L + U log U)` | Jaccard contra todos os perfis e ordenação dos usuários |
 
 Com `J = 40` e `U = 30`, todas as etapas rodam instantaneamente. A parte `O(J²)`
 da projeção é o gargalo teórico; para bases grandes, um **índice invertido**
@@ -186,7 +186,9 @@ palavras — é uma evolução natural mencionada na proposta.
 
 - **Vocabulário/sinônimos:** "FPS" no texto não casa com "tiro em primeira pessoa"
   na descrição. Mitigação simples: um pequeno dicionário de sinônimos.
-- **Diversidade:** a recomendação por texto tende a sugerir "mais do mesmo".
-  Pegar os top-K vizinhos (em vez de só o primeiro) aumentaria a variedade.
+- **Diversidade:** a recomendação por texto tende a sugerir "mais do mesmo". O
+  sistema já usa os top-K usuários mais parecidos (não só o primeiro) para
+  completar a lista, o que ajuda — mas o sinal continua sendo só sobreposição de
+  palavras-chave.
 - **Índice invertido** `lema → jogos/usuários` para escalar a similaridade.
 - **Qualidade dos dados:** descrições mais ricas geram perfis melhores.

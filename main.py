@@ -87,17 +87,26 @@ def fluxo_usuario_novo(jogos, usuarios, grafo_bipartido, palavras_por_jogo,
         print("=" * 50)
         return
 
-    indice_similar = resultado["usuario_similar_indice"]
-    nome_similar = buscar_nome_por_id(usuarios, indice_similar + 1)
-
     print(f"Palavras-chave extraídas: {sorted(perfil_novo)}")
-    print(
-        f"\nUsuário mais parecido: {nome_similar} (id {indice_similar + 1}) "
-        f"— similaridade de Jaccard = {resultado['similaridade']:.3f}"
-    )
-    print(f"\nTop {quantidade} jogos recomendados (herdados do usuário parecido):")
-    for posicao, jogo_indice in enumerate(resultado["jogos_indices"], start=1):
-        print(f"  {posicao}. {nome_do_jogo(jogos, jogo_indice)}")
+
+    recomendacoes = resultado["recomendacoes"]
+    print(f"\nTop {quantidade} jogos recomendados (com o usuário de origem):")
+    for posicao, (jogo_indice, usuario_indice, score) in enumerate(recomendacoes, start=1):
+        nome_origem = buscar_nome_por_id(usuarios, usuario_indice + 1)
+        print(
+            f"  {posicao}. {nome_do_jogo(jogos, jogo_indice)}  "
+            f"— de {nome_origem} (Jaccard {score:.3f})"
+        )
+
+    # lista os usuários parecidos de onde as recomendações vieram (sem repetir)
+    usuarios_usados = []
+    for _jogo_indice, usuario_indice, score in recomendacoes:
+        if (usuario_indice, score) not in usuarios_usados:
+            usuarios_usados.append((usuario_indice, score))
+    print(f"\nUsuários parecidos usados ({len(usuarios_usados)}):")
+    for usuario_indice, score in usuarios_usados:
+        nome_usado = buscar_nome_por_id(usuarios, usuario_indice + 1)
+        print(f"  - {nome_usado} (id {usuario_indice + 1}) — Jaccard {score:.3f}")
     print("=" * 50)
 
 

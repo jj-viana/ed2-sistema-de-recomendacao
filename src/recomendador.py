@@ -139,44 +139,50 @@ def jaccard(conjunto_a, conjunto_b):
     return len(conjunto_a & conjunto_b) / uniao
 
 
-def usuario_mais_similar(perfil_novo, perfis):
-    # retorna (índice do usuário mais parecido, similaridade de Jaccard).
-    # desempate: maior interseção absoluta (quem compartilha mais palavras).
-    melhor_indice = -1
-    melhor_score = -1.0
-    melhor_intersecao = -1
+def usuarios_similares(perfil_novo, perfis):
+    # ordena os usuários por similaridade de Jaccard com o perfil do usuário novo
+    # (desempate por maior interseção). Retorna lista de (indice, score) com score > 0.
+    ranqueados = []
     for indice, perfil in enumerate(perfis):
         score = jaccard(perfil_novo, perfil)
-        intersecao = len(perfil_novo & perfil)
-        if score > melhor_score or (score == melhor_score and intersecao > melhor_intersecao):
-            melhor_indice = indice
-            melhor_score = score
-            melhor_intersecao = intersecao
-    return melhor_indice, melhor_score
+        if score > 0.0:
+            ranqueados.append((indice, score, len(perfil_novo & perfil)))
+    ranqueados.sort(key=lambda item: (item[1], item[2]), reverse=True)
+    return [(indice, score) for indice, score, _intersecao in ranqueados]
 
 
 def recomendar_usuario_novo(perfil_novo, grafo_bipartido, palavras_por_jogo, quantidade=5):
-    # recebe o conjunto de palavras-chave do usuário novo (já extraído do texto),
-    # acha o usuário mais parecido por Jaccard e recomenda os jogos dele.
-    # retorna None se nenhum usuário compartilhar qualquer palavra-chave (cold start).
+    # recebe o conjunto de palavras-chave do usuário novo (já extraído do texto) e
+    # recomenda jogos dos usuários mais parecidos por Jaccard, em ordem, até atingir
+    # a quantidade pedida. Retorna None se ninguém compartilhar palavra-chave.
     perfis = construir_perfis_usuarios(grafo_bipartido, palavras_por_jogo)
-    indice_similar, similaridade = usuario_mais_similar(perfil_novo, perfis)
-    if indice_similar < 0 or similaridade <= 0.0:
+    similares = usuarios_similares(perfil_novo, perfis)
+    if not similares:
         return None
 
-    # ordena os jogos do vizinho pela relevância textual com o usuário novo
-    # (quantos lemas o jogo compartilha com o texto digitado) e pega os top-N
-    jogos_do_vizinho = grafo_bipartido.usuarios[indice_similar]
-    jogos_ordenados = sorted(
-        jogos_do_vizinho,
-        key=lambda jogo_indice: len(
-            perfil_novo & {termo for termo, _f in palavras_por_jogo[jogo_indice]}
-        ),
-        reverse=True,
-    )
+    # percorre os usuários do mais parecido ao menos parecido, herdando os jogos
+    # deles (ordenados por relevância textual) sem repetir, até completar a lista.
+    # O usuário mais parecido tem prioridade; os demais só entram para preencher.
+    # Cada recomendação guarda de QUAL usuário (e com que Jaccard) ela veio.
+    recomendacoes = []  # (jogo_indice, usuario_indice, similaridade_do_usuario)
+    ja_incluidos = set()
+    for usuario_indice, score in similares:
+        jogos_do_usuario = sorted(
+            grafo_bipartido.usuarios[usuario_indice],
+            key=lambda jogo_indice: len(
+                perfil_novo & {termo for termo, _f in palavras_por_jogo[jogo_indice]}
+            ),
+            reverse=True,
+        )
+        for jogo_indice in jogos_do_usuario:
+            if jogo_indice not in ja_incluidos:
+                ja_incluidos.add(jogo_indice)
+                recomendacoes.append((jogo_indice, usuario_indice, score))
+        if len(recomendacoes) >= quantidade:
+            break
 
     return {
-        "usuario_similar_indice": indice_similar,
-        "similaridade": similaridade,
-        "jogos_indices": jogos_ordenados[:quantidade],
+        "usuario_similar_indice": similares[0][0],
+        "similaridade": similares[0][1],
+        "recomendacoes": recomendacoes[:quantidade],
     }
